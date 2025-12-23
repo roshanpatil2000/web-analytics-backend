@@ -8,6 +8,7 @@
     "dev": "nodemon src/index.ts"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "express": "^4.17.1"
   },
   "devDependencies": {

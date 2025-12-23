@@ -5,13 +5,12 @@ import { SuccessResponseBody, ErrorResponseBody } from './types';
 
 const successResponse = (
     res: Response,
-    message: string = "Success",
     data: Record<string, unknown> = {},
     status: number = 200
 ): Response => {
     const response: SuccessResponseBody = {
         success: true,
-        message,
+        status,
         data,
     };
 
@@ -25,8 +24,8 @@ const errorResponse = (
 ): Response => {
     const response: ErrorResponseBody = {
         success: false,
-        status,
         error,
+        status,
     };
 
     return res.status(status).json(response);
