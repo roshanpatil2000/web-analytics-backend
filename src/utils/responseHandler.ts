@@ -12,7 +12,7 @@ const successResponse = (
     const response: SuccessResponseBody = {
         success: true,
         message,
-        ...data,
+        data,
     };
 
     return res.status(status).json(response);
