@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import express, { Request, Response } from 'express';
 import { errorResponse, successResponse } from './utils/responseHandler';
-import healthRouter from './routers/user.router';
+import healthRouter from './routers/health.router';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
