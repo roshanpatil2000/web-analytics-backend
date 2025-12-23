@@ -1,7 +1,8 @@
 export interface SuccessResponseBody {
     success: true;
-    message: string;
+    // message: string;
     data?: Record<string, unknown>;
+    status: number;
 }
 
 export interface ErrorResponseBody {
