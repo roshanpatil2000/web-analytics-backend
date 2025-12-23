@@ -10,9 +10,6 @@ export const healthcheckHandler = (req: Request, res: Response<any, Record<strin
     const usedMemory = totalMemory - freeMemory;
 
     try {
-        if (!loadAverage || !totalMemory || !freeMemory) {
-            throw new Error("Unable to fetch system metrics",);
-        }
         const serverStatus = {
             status: "OK",
             uptime: process.uptime(),
