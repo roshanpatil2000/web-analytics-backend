@@ -11,10 +11,38 @@ const client = new Client({
     connectionString: databaseUrl,
 });
 
-client.connect().catch((err) => {
-    console.error('Failed to connect to database:', err);
-    process.exit(1);
-});
+let isConnected = false;
 
 const db = drizzle(client);
+
+export async function connectDb(): Promise<void> {
+    if (isConnected) {
+        return;
+    }
+
+    try {
+        await client.connect();
+        isConnected = true;
+        console.log('✅ Successfully connected to database');
+    } catch (error) {
+        console.error('❌ Failed to connect to database:', error);
+        throw error;
+    }
+}
+
+export async function disconnectDb(): Promise<void> {
+    if (!isConnected) {
+        return;
+    }
+
+    try {
+        await client.end();
+        isConnected = false;
+        console.log('✅ Disconnected from database');
+    } catch (error) {
+        console.error('❌ Error disconnecting from database:', error);
+        throw error;
+    }
+}
+
 export default db;

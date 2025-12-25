@@ -5,9 +5,29 @@ import { errorResponse, successResponse } from './utils/responseHandler';
 import healthRouter from './routers/health.router';
 import userRouter from './routers/user.router';
 import { errorHandler } from './middlewares/errorHandler';
+import { connectDb, disconnectDb } from './db/index';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Connect to database
+connectDb().catch((error) => {
+    console.error('Failed to connect to database on startup:', error);
+    process.exit(1);
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('Received SIGINT, shutting down gracefully...');
+    await disconnectDb();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    console.log('Received SIGTERM, shutting down gracefully...');
+    await disconnectDb();
+    process.exit(0);
+});
 
 // middlewares
 app.use(express.json());
