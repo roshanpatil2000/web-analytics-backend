@@ -23,7 +23,6 @@ app.use('/api/v1/health', healthRouter);
 app.use('/api/v1/user', userRouter);
 
 
-
 // Handle 404 - Not Found
 app.use((req: Request, res: Response) => {
     // res.status(404).json({ message: 'Route not found' });
