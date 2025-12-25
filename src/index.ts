@@ -3,6 +3,7 @@ dotenv.config();
 import express, { Request, Response } from 'express';
 import { errorResponse, successResponse } from './utils/responseHandler';
 import healthRouter from './routers/health.router';
+import userRouter from './routers/user.router';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
@@ -19,6 +20,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // routes
 app.use('/api/v1/health', healthRouter);
+app.use('/api/v1/user', userRouter);
 
 
 
