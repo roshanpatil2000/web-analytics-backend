@@ -24,8 +24,8 @@ const errorResponse = (
 ): Response => {
     const response: ErrorResponseBody = {
         success: false,
-        error,
         status,
+        error,
     };
 
     return res.status(status).json(response);
