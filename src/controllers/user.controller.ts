@@ -14,12 +14,12 @@ const createUser = async (req: Request, res: Response) => {
     try {
         const { name, email, age } = req.body;
         if (!name || !email || !age) {
-            return errorResponse(res, { message: "All fileds are required!" }, 400)
+            return errorResponse(res, { message: "All fields are required!" }, 400)
         }
 
         const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, email));
         if (existingUser.length > 0) {
-            return errorResponse(res, { message: "User already exits" }, 400)
+            return errorResponse(res, { message: "User already exists" }, 400)
         }
 
         const newUser = await db.insert(usersTable).values({ name, email, age }).returning()
@@ -71,7 +71,7 @@ const getUserById = async (req: Request, res: Response) => {
 const deleteAllUsers = async (_req: Request, res: Response) => {
     try {
         await db.delete(usersTable).returning()
-        return successResponse(res, { message: "all users deleted suceesfully!" }, 200)
+        return successResponse(res, { message: "all users deleted successfully!" }, 200)
     } catch (err) {
         return errorResponse(res, { message: "something went wrong!" }, 500)
     }
@@ -93,7 +93,7 @@ const deleteUserById = async (req: Request, res: Response) => {
         }
 
         await db.delete(usersTable).where(eq(usersTable.userId, id)).returning()
-        return successResponse(res, { message: "user deleted suceesfully!" }, 200)
+        return successResponse(res, { message: "user deleted successfully!" }, 200)
     } catch (err) {
         return errorResponse(res, { message: "something went wrong!" }, 500)
     }
