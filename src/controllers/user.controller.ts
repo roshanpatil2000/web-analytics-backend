@@ -6,7 +6,6 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
 import { usersTable } from '../db/schema';
 import { validate as isUuid } from "uuid";
-import { uuid } from 'drizzle-orm/gel-core';
 
 const db = drizzle(process.env.DATABASE_URL!);
 
@@ -15,12 +14,12 @@ const createUser = async (req: Request, res: Response) => {
     try {
         const { name, email, age } = req.body;
         if (!name || !email || !age) {
-            return errorResponse(res, { message: "All fileds are required!" }, 404)
+            return errorResponse(res, { message: "All fileds are required!" }, 400)
         }
 
         const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, email));
         if (existingUser.length > 0) {
-            return errorResponse(res, { message: "User already exits" }, 404)
+            return errorResponse(res, { message: "User already exits" }, 400)
         }
 
         const newUser = await db.insert(usersTable).values({ name, email, age }).returning()
@@ -51,7 +50,7 @@ const getUserById = async (req: Request, res: Response) => {
         const { id } = req.params;
         console.log(id)
         if (!id) {
-            return errorResponse(res, { message: "user id required!" })
+            return errorResponse(res, { message: "user id required!" }, 400)
         }
         if (!isUuid(id)) {
             return errorResponse(res, { message: "invalid user id " }, 404)
@@ -72,7 +71,7 @@ const getUserById = async (req: Request, res: Response) => {
 const deleteAllUsers = async (_req: Request, res: Response) => {
     try {
         await db.delete(usersTable).returning()
-        return successResponse(res, { messageg: "all users deleted suceesfully!" }, 200)
+        return successResponse(res, { message: "all users deleted suceesfully!" }, 200)
     } catch (err) {
         return errorResponse(res, { message: "something went wrong!" }, 500)
     }
@@ -94,7 +93,7 @@ const deleteUserById = async (req: Request, res: Response) => {
         }
 
         await db.delete(usersTable).where(eq(usersTable.userId, id)).returning()
-        return successResponse(res, { messageg: "user deleted suceesfully!" }, 200)
+        return successResponse(res, { message: "user deleted suceesfully!" }, 200)
     } catch (err) {
         return errorResponse(res, { message: "something went wrong!" }, 500)
     }
