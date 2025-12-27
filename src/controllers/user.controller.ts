@@ -6,7 +6,7 @@ import db from '../db';
 import { usersTable } from '../db/schema';
 import { SignupBody } from '../utils/types';
 import { generateToken } from '../utils/generateToken';
-import { generateVerificationToken } from '../utils/generateVerficationtoken';
+import { generateVerificationToken, generateVerificationTokenNew } from '../utils/generateVerficationtoken';
 
 const sanitizeUser = (u: any) => {
     const { password, ...safe } = u;
@@ -17,20 +17,20 @@ const Signup = async (req: Request<{}, {}, SignupBody>, res: Response) => {
     try {
         const { name, email, password, role } = req.body;
         if (!name || !email || !password) {
-            return errorResponse(res, { message: "All fields are required!" }, 403)
+            return errorResponse(res, { message: "All fields are required!" }, 400)
         }
 
         // check if user already exists
         const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, email));
 
         if (existingUser.length > 0) {
-            return errorResponse(res, { message: "User already exists" }, 403)
+            return errorResponse(res, { message: "User already exists" }, 409)
         }
 
         const hashed = await bcrypt.hash(password, 10);
         const verificationToken = generateVerificationToken();
 
-        console.log("Verification Token:", verificationToken);
+        // Verification token generated - sent to user via email (not logged for security)
 
         // if user not already exits then create new user 
         const [created] = await db
@@ -59,7 +59,8 @@ const Signup = async (req: Request<{}, {}, SignupBody>, res: Response) => {
         console.log('User created:', sanitizeUser(addToken));
         return successResponse(res, { message: "User created successfully", user: sanitizeUser(addToken) }, 201)
     } catch (error) {
-        return errorResponse(res, { error }, 500)
+        console.error('Signup error:', error);
+        return errorResponse(res, { message: "Something went wrong!" }, 500)
     }
 };
 

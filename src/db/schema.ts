@@ -4,12 +4,12 @@ export const roleEnum = pgEnum("role", ["user", "admin"]);
 
 
 export const usersTable = pgTable("users", {
-    id: uuid().defaultRandom().unique().notNull(),
+    id: uuid().defaultRandom().primaryKey(),
     email: varchar().unique().notNull(),
     password: varchar().notNull(),
     name: varchar().notNull(),
     role: roleEnum().default("user").notNull(),
-    lastLogin: timestamp().defaultNow(),
+    lastLogin: timestamp(),
     isVerified: boolean().default(false).notNull(),
     hasPremium: boolean().default(false).notNull(),
     authToken: varchar(),
@@ -18,5 +18,6 @@ export const usersTable = pgTable("users", {
     verificationToken: varchar(),
     verificationExpiresAt: timestamp(),
     createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp().defaultNow().notNull(),
+    updatedAt: timestamp().defaultNow().$onUpdate(() => new Date()).notNull(),
+
 });
