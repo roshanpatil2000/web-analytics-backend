@@ -1,9 +1,22 @@
-import { integer, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, pgTable, uuid, varchar, timestamp, pgEnum } from "drizzle-orm/pg-core";
+
+export const roleEnum = pgEnum("role", ["user", "admin"]);
+
 
 export const usersTable = pgTable("users", {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: uuid().defaultRandom().notNull().unique(),
-    name: varchar({ length: 255 }).notNull(),
-    age: integer().notNull(),
-    email: varchar({ length: 255 }).notNull().unique(),
+    id: uuid().defaultRandom().unique().notNull(),
+    email: varchar().unique().notNull(),
+    password: varchar().notNull(),
+    name: varchar().notNull(),
+    role: roleEnum().default("user").notNull(),
+    lastLogin: timestamp().defaultNow(),
+    isVerified: boolean().default(false).notNull(),
+    hasPremium: boolean().default(false).notNull(),
+    authToken: varchar(),
+    resetPasswordToken: varchar(),
+    resetPasswordExpiresAt: timestamp(),
+    verificationToken: varchar(),
+    verificationExpiresAt: timestamp(),
+    createdAt: timestamp().defaultNow().notNull(),
+    updatedAt: timestamp().defaultNow().notNull(),
 });

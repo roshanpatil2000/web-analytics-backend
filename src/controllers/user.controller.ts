@@ -1,103 +1,72 @@
-import express, { Request, Response } from 'express';
-import { errorResponse, successResponse } from "../utils/responseHandler";
-
-import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+import { errorResponse, successResponse } from '../utils/responseHandler';
+import db from '../db';
 import { usersTable } from '../db/schema';
-import { validate as isUuid } from "uuid";
+import { SignupBody } from '../utils/types';
+import { generateToken } from '../utils/generateToken';
+import { generateVerificationToken } from '../utils/generateVerficationtoken';
 
-const db = drizzle(process.env.DATABASE_URL!);
+const sanitizeUser = (u: any) => {
+    const { password, ...safe } = u;
+    return safe;
+};
 
-// Create a new user
-const createUser = async (req: Request, res: Response) => {
+const Signup = async (req: Request<{}, {}, SignupBody>, res: Response) => {
     try {
-        const { name, email, age } = req.body;
-        if (!name || !email || !age) {
-            return errorResponse(res, { message: "All fields are required!" }, 400)
+        const { name, email, password, role } = req.body;
+        if (!name || !email || !password) {
+            return errorResponse(res, { message: "All fields are required!" }, 403)
         }
 
+        // check if user already exists
         const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, email));
+
         if (existingUser.length > 0) {
-            return errorResponse(res, { message: "User already exists" }, 400)
+            return errorResponse(res, { message: "User already exists" }, 403)
         }
 
-        const newUser = await db.insert(usersTable).values({ name, email, age }).returning()
-        return successResponse(res, { newUser }, 201)
+        const hashed = await bcrypt.hash(password, 10);
+        const verificationToken = generateVerificationToken();
+
+        console.log("Verification Token:", verificationToken);
+
+        // if user not already exits then create new user 
+        const [created] = await db
+            .insert(usersTable)
+            .values({
+                email,
+                password: hashed,
+                name,
+                role: role || 'user',
+                verificationToken: verificationToken,
+                verificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+
+            })
+            .returning();
+
+        const token = await generateToken({ id: created.id, email: created.email, role: created.role });
+        const [addToken] = await db.update(usersTable).set({ authToken: token }).where(eq(usersTable.id, created.id)).returning();
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000,
+        });
+
+        console.log('User created:', sanitizeUser(addToken));
+        return successResponse(res, { message: "User created successfully", user: sanitizeUser(addToken) }, 201)
     } catch (error) {
-        console.log(error);
-        return errorResponse(res, { message: "Something went wrong!" }, 500)
+        return errorResponse(res, { error }, 500)
     }
-
 };
 
-// Get all users
-const getAllUsers = async (_req: Request, res: Response) => {
-    try {
-        const users = await db.select().from(usersTable);
-        console.log('Fetched users:', users);
-        return successResponse(res, { users }, 200)
-    } catch (error) {
-        console.log(error);
-        return errorResponse(res, { message: "Something went wrong!" }, 500)
-    }
+const Login = (req: Request, res: Response) => { };
+const getAllUsers = (req: Request, res: Response) => { };
+const getUserById = (req: Request, res: Response) => { };
+const deleteAllUsers = (req: Request, res: Response) => { };
+const deleteUserById = (req: Request, res: Response) => { };
 
-};
-
-// get user by id 
-const getUserById = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        console.log(id)
-        if (!id) {
-            return errorResponse(res, { message: "user id required!" }, 400)
-        }
-        if (!isUuid(id)) {
-            return errorResponse(res, { message: "invalid user id " }, 404)
-        }
-
-
-        const checkUser = await db.select().from(usersTable).where(eq(usersTable.userId, id))
-        console.log("checkUser", checkUser)
-        return successResponse(res, { users: checkUser }, 200)
-    } catch (error) {
-        console.log(error);
-        return errorResponse(res, { message: "Something went wrong!" }, 500)
-    }
-
-}
-
-// Delete all users
-const deleteAllUsers = async (_req: Request, res: Response) => {
-    try {
-        await db.delete(usersTable).returning()
-        return successResponse(res, { message: "all users deleted successfully!" }, 200)
-    } catch (err) {
-        return errorResponse(res, { message: "something went wrong!" }, 500)
-    }
-
-};
-
-// Delete user by id
-const deleteUserById = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    try {
-        if (!isUuid(id)) {
-            return errorResponse(res, { message: "invalid user id" }, 404)
-        }
-
-        const existingUser = await db.select().from(usersTable).where(eq(usersTable.userId, id))
-
-        if (existingUser.length <= 0) {
-            return errorResponse(res, { message: "user not found" }, 400)
-        }
-
-        await db.delete(usersTable).where(eq(usersTable.userId, id)).returning()
-        return successResponse(res, { message: "user deleted successfully!" }, 200)
-    } catch (err) {
-        return errorResponse(res, { message: "something went wrong!" }, 500)
-    }
-
-};
-
-export { createUser, getAllUsers, getUserById, deleteAllUsers, deleteUserById };
+export { Signup, Login, deleteAllUsers, deleteUserById, getAllUsers, getUserById }
