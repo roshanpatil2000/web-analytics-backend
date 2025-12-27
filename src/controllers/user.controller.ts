@@ -6,7 +6,7 @@ import db from '../db';
 import { usersTable } from '../db/schema';
 import { SignupBody } from '../utils/types';
 import { generateToken } from '../utils/generateToken';
-import { generateVerificationToken, generateVerificationTokenNew } from '../utils/generateVerficationtoken';
+import { generateVerificationToken } from '../utils/generateVerficationtoken';
 
 const sanitizeUser = (u: any) => {
     const { password, ...safe } = u;
@@ -40,6 +40,7 @@ const Signup = async (req: Request<{}, {}, SignupBody>, res: Response) => {
                 password: hashed,
                 name,
                 role: role || 'user',
+                lastLogin: new Date(),
                 verificationToken: verificationToken,
                 verificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
 
